@@ -39,12 +39,12 @@ describe Deck do
   end
 
   describe '#empty?' do
-    it 'returns true when there are no cards left' do
+    it 'returns false when there are cards' do
       deck = Deck.new
       expect(deck).to_not be_empty
     end
 
-    it 'returns false when there are no cards left' do
+    it 'returns true when there are no cards left' do
       deck = Deck.new
 
       # clear all the cards
