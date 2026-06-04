@@ -21,4 +21,91 @@ describe Game do
       expect(game.deck).to be_a(Deck)
     end
   end
+
+  describe '#start' do
+    let(:unshuffled_deck) { Deck.new }
+    let(:player1) { Player.new('Jeff') }
+    let(:player2) { Player.new('Bob') }
+    let(:player3) { Player.new('Billy') }
+    let(:player4) { Player.new('Batman') }
+
+    # shuffles a deck
+    # deals the deck to the players
+
+    context 'with 2 or 3 players' do
+      let(:players) { [player1, player2] }
+      let(:game) { described_class.new(players) }
+
+      let(:cards_per_player) { 7 }
+      let(:card_indices_used) { (0...(cards_per_player * players.length)).to_a }
+
+      before do
+        game.start
+      end
+
+      it 'deals 7 cards to each player' do
+        expect(player1.cards.length).to eq cards_per_player
+        expect(player2.cards.length).to eq cards_per_player
+      end
+
+      # this assumes that it alternates between players when dealing the cards
+      it 'cards are shuffled' do
+        # even numbers (on 2 players)
+        p1_unshuffled_card_indices = card_indices_used.select { |x| x % players.length == 0 }
+
+        # odd numbers (for 2 players)
+        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % players.length == 0 }
+
+        p1_unshuffled = p1_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+        p2_unshuffled = p2_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+
+        expect(player1.cards).to_not eq p1_unshuffled
+        expect(player2.cards).to_not eq p2_unshuffled
+      end
+    end
+
+    context 'with 4 or more players' do
+      let(:players) { [player1, player2, player3, player4] }
+      let(:game) { described_class.new(players) }
+
+      let(:cards_per_player) { 5 }
+      let(:card_indices_used) { (0...(cards_per_player * players.length)).to_a }
+
+      before do
+        game.start
+      end
+
+      it 'deals 5 cards to each player' do
+        expect(player1.cards.length).to eq cards_per_player
+        expect(player2.cards.length).to eq cards_per_player
+        expect(player3.cards.length).to eq cards_per_player
+        expect(player4.cards.length).to eq cards_per_player
+      end
+
+      # this assumes the deal method alternates between players when dealing
+      it 'cards are shuffled' do
+        # [0, 4, 8, 12, 16]
+        p1_unshuffled_card_indices = card_indices_used.select { |x| x % players.length == 0 }
+
+        # [1, 5, 9, 13, 17]
+        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % players.length == 0 }
+
+        # [2, 6, 10, 14, 18]
+        p3_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % players.length == 0 }
+
+        # [3, 7, 11, 15, 19]
+        p4_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % players.length == 0 }
+
+        p1_unshuffled = p1_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+        p2_unshuffled = p2_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+        p3_unshuffled = p3_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+        p4_unshuffled = p4_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
+
+        expect(player1.cards).to_not eq p1_unshuffled
+        expect(player2.cards).to_not eq p2_unshuffled
+        expect(player3.cards).to_not eq p3_unshuffled
+        expect(player4.cards).to_not eq p4_unshuffled
+      end
+    end
+  end
 end
