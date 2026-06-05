@@ -1,6 +1,6 @@
 require 'socket'
-require 'client'
-require 'game'
+require_relative 'client'
+require_relative 'game'
 
 class SocketServer
   PORT = '3336'.freeze

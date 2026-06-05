@@ -1,5 +1,5 @@
 require 'socket'
-require 'client'
+require_relative 'client'
 
 socket = TCPSocket.new('localhost', 3336)
 while true
