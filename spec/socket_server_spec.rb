@@ -22,7 +22,7 @@ describe SocketServer do
     expect { MockSocketClient.new(SocketServer::PORT) }.to raise_error(Errno::ECONNREFUSED)
   end
 
-  context 'when clients join' do
+  describe 'when clients join' do
     let(:client1) { MockSocketClient.new(SocketServer::PORT) }
     let(:player1_name) { 'Jeff' }
 
@@ -56,300 +56,104 @@ describe SocketServer do
     end
   end
 
-  xit 'all players get a starting message when the second client joins' do
-    client1 = MockSocketClient.new(SocketServer::PORT)
-    @clients.push(client1)
-    @server.accept_new_client('Player 1')
-    client1.capture_output
-
-    client2 = MockSocketClient.new(SocketServer::PORT)
-    @clients.push(client2)
-    @server.accept_new_client('Player 2')
-
-    @server.create_game_if_possible
-    expect(client1.capture_output).to match(/starting/i)
-    expect(client2.capture_output).to match(/starting/i)
-  end
-
-  xit 'accepts new clients and starts a game if possible' do
-    client1 = MockSocketClient.new(SocketServer::PORT)
-    @clients.push(client1)
-    @server.accept_new_client('Player 1')
-    @server.create_game_if_possible
-    expect(@server.games.count).to be 0
-
-    client2 = MockSocketClient.new(SocketServer::PORT)
-    @clients.push(client2)
-    @server.accept_new_client('Player 2')
-    @server.create_game_if_possible
-    expect(@server.games.count).to be 1
-  end
-
-  xcontext 'if 3 clients join' do
+  describe 'pending clients' do
     let(:client1) { MockSocketClient.new(SocketServer::PORT) }
+    let(:player1_name) { 'Jeff' }
+
     let(:client2) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client3) { MockSocketClient.new(SocketServer::PORT) }
+    let(:player2_name) { 'Bob' }
 
     before do
       @clients.push client1
-      @server.accept_new_client('Player 1')
+      @server.accept_new_client(player1_name)
 
       @clients.push client2
-      @server.accept_new_client('Player 2')
-
-      @server.create_game_if_possible
-
-      @clients.push client3
-      @server.accept_new_client('Player 3')
-
-      @server.create_game_if_possible
+      @server.accept_new_client(player2_name)
     end
 
-    it 'only 1 game is created' do
-      expect(@server.games.count).to be 1
-    end
-
-    it 'third client does not receive starting message' do
-      # expect(client3.capture_output).to match(/welcome/i)
-      expect(client3.capture_output).to_not match(/starting/i)
-    end
-  end
-
-  xcontext 'if 4 clients join' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client3) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client4) { MockSocketClient.new(SocketServer::PORT) }
-
-    before do
-      @clients.push client1
-      @server.accept_new_client('Player 1')
-
-      @clients.push client2
-      @server.accept_new_client('Player 2')
-
+    it 'get ready prompt' do
       @server.create_game_if_possible
+      expect(client1.capture_output).to match(/ready/i)
+      expect(client2.capture_output).to match(/ready/i)
+    end
 
-      # clear the starting message
+    it 'ready prompt happens only once' do
+      @server.create_game_if_possible
       client1.capture_output
       client2.capture_output
 
-      @clients.push client3
-      @server.accept_new_client('Player 3')
-
-      @clients.push client4
-      @server.accept_new_client('Player 4')
-
       @server.create_game_if_possible
-    end
-
-    it '2 games are created' do
-      expect(@server.games.count).to be 2
-    end
-
-    it 'first and second client only receive one starting message' do
-      expect(client3.capture_output).to_not match(/starting/i)
-      expect(client4.capture_output).to_not match(/starting/i)
-    end
-
-    xit 'third and fourth client receive starting message' do
-      expect(client3.capture_output).to match(/starting/i)
-      expect(client4.capture_output).to match(/starting/i)
-    end
-
-    # this one causes it to freeze...
-    xit 'first game contains first two clients' do
-      game1 = @server.games[0]
-      client1_socket = game1.clients[0].socket
-      client2_socket = game1.clients[1].socket
-
-      expect(client1_socket).to eq client1
-      expect(client2_socket).to eq client2
-    end
-
-    # this one might also cause it to freeze
-    xit 'second game contains second two clients' do
-      game2 = @server.games[1]
-      client1_socket = game2.clients[0].socket
-      client2_socket = game2.clients[1].socket
-
-      expect(client1_socket).to eq client3
-      expect(client2_socket).to eq client4
-    end
-  end
-
-  # Add more tests to make sure the game is being played
-  # For example:
-  #   make sure the mock client gets appropriate output
-  #   make sure the next round isn't played until both clients say they are ready to play
-  #   ...
-
-  xdescribe '#try_play_round' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
-
-    before do
-      @clients.push(client1)
-      @server.accept_new_client('Player 1')
-
-      @clients.push(client2)
-      @server.accept_new_client('Player 2')
-      @server.create_game_if_possible
-
-      client1.capture_output
-      client2.capture_output
-    end
-
-    it 'each player gets a question that they are ready only once' do
-      game = @server.games[0]
-      game.start
-
-      @server.try_play_round(game)
-      expect(client1.capture_output).to match(/ready\?/i)
-      expect(client2.capture_output).to match(/ready\?/i)
-
-      @server.try_play_round(game)
-      client1.capture_output
-      client2.capture_output
-
-      @server.try_play_round(game)
       expect(client1.capture_output).to be_empty
       expect(client2.capture_output).to be_empty
     end
 
-    it 'when one player is ready, messages are correct for both players' do
-      game = @server.games[0]
-      game.start
-
-      @server.try_play_round(game)
-      client1.capture_output
-      client2.capture_output
-
-      client1.provide_input('I am sooooo ready')
-      @server.try_play_round(game)
-      expect(client1.capture_output).to match(/waiting/i)
-      expect(client2.capture_output).to be_empty
-    end
-
-    context 'when all players are ready' do
-      let(:game) { @server.games[0] }
-      before do
-        game.start
-
-        @server.try_play_round(game)
+    context 'when all players confirmed' do
+      it 'shows starting message to all players' do
         client1.capture_output
         client2.capture_output
 
         client1.provide_input('I am sooooo ready')
-        @server.try_play_round(game)
-
-        client1.capture_output
-        client2.capture_output
-
         client2.provide_input('\n')
-      end
 
-      it 'it sends a message to both players' do
-        @server.try_play_round(game)
+        @server.create_game_if_possible
 
-        expect(client2.capture_output).to match(/both/i)
-        expect(client1.capture_output).to match(/both/i)
-      end
-
-      it 'when all player are ready it calls play_round on game' do
-        expect(game).to receive(:play_round)
-        @server.try_play_round(game)
-      end
-
-      it 'it resets ready and received message variables to false' do
-        @server.try_play_round(game)
-
-        client1.capture_output
-        client2.capture_output
-
-        @server.try_play_round(game)
-
-        expect(client1.capture_output).to match(/ready\?/i)
-        expect(client2.capture_output).to match(/ready\?/i)
-      end
-
-      it 'it shows round result to server' do
-        # expect($stdout).to receive(:puts).with(game.progress).at_least(1).time
-        expect($stdout).to receive(:puts).at_least(1).time
-
-        @server.try_play_round(game)
-      end
-
-      it 'it does not accept stacking input from players' do
-        client1.provide_input('I am sooooo ready')
-        client2.provide_input('I am sooooo ready')
-
-        client1.provide_input('I am sooooo ready')
-        client2.provide_input('I am sooooo ready')
-
-        expect(game).to receive(:play_round).exactly(1).times
-
-        @server.try_play_round(game)
-        @server.try_play_round(game)
-        @server.try_play_round(game)
+        expect(client1.capture_output).to match(/starting/i)
+        expect(client2.capture_output).to match(/starting/i)
       end
     end
   end
 
-  xdescribe '#play_round' do
+  describe '#create_game_if_possible' do
     let(:client1) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
+    let(:player1_name) { 'Jeff' }
 
     before do
-      @clients.push(client1)
-      @server.accept_new_client('Player 1')
-
-      @clients.push(client2)
-      @server.accept_new_client('Player 2')
-      @server.create_game_if_possible
-
-      client1.capture_output
-      client2.capture_output
+      @clients.push client1
+      @server.accept_new_client(player1_name)
     end
 
-    it 'it shows round result to all players' do
-      game = @server.games[0]
-      game.start
+    context '1 ready player' do
+      it 'does not create a game' do
+        client1.provide_input('I am sooooo ready')
 
-      game.play_round
-
-      # {winning_player.name} took a #{cards_on_table_s} with a #{winning_card}
-      expect(client1.capture_output).to match(/took a/)
-      expect(client2.capture_output).to match(/took a/)
-    end
-  end
-
-  xdescribe '#play_game' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
-    before do
-      @clients.push(client1)
-      @server.accept_new_client('Player 1')
-
-      @clients.push(client2)
-      @server.accept_new_client('Player 2')
-      @server.create_game_if_possible
-
-      client1.capture_output
-      client2.capture_output
+        @server.create_game_if_possible
+        expect(@server.games.count).to be 0
+      end
     end
 
-    it 'prints the result to all players when there is a winner' do
-      game = @server.games[0]
-      game.start
+    context '2+ players' do
+      let(:client2) { MockSocketClient.new(SocketServer::PORT) }
+      let(:player2_name) { 'Bob' }
 
-      # force player 1 to run out of cards
-      game.game.player1.instance_variable_set(:@cards, [])
+      before do
+        @clients.push client2
+        @server.accept_new_client(player2_name)
+      end
 
-      @server.play_game(game)
+      context '0 ready' do
+        it 'does not create a game' do
+          @server.create_game_if_possible
+          expect(@server.games.count).to be 0
+        end
+      end
 
-      expect(client1.capture_output).to match(/winner/i)
-      expect(client2.capture_output).to match(/winner/i)
+      context '1 ready' do
+        it 'does not create a game' do
+          client1.provide_input('I am sooooo ready')
+          @server.create_game_if_possible
+          expect(@server.games.count).to be 0
+        end
+      end
+
+      context 'all ready' do
+        it 'creates a game' do
+          client1.provide_input('I am sooooo ready')
+          client2.provide_input('Ready')
+
+          @server.create_game_if_possible
+          expect(@server.games.count).to eq 1
+        end
+      end
     end
   end
 end

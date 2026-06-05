@@ -1,6 +1,6 @@
-require_relative 'war_socket_server'
+require_relative 'socket_server'
 
-server = WarSocketServer.new
+server = SocketServer.new
 server.start
 while true
   begin

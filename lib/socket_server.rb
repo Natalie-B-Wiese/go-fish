@@ -1,5 +1,6 @@
 require 'socket'
 require 'client'
+require 'game'
 
 class SocketServer
   PORT = '3336'.freeze
@@ -32,7 +33,36 @@ class SocketServer
     puts 'No client to accept'
   end
 
+  def create_game_if_possible
+    return if clients.length < Game::MIN_PLAYERS
+
+    return unless clients_ready?
+
+    puts_to_clients(clients, 'Game is starting...')
+
+    new_game = Game.new(clients)
+    games.push(new_game)
+    new_game
+  end
+
   private
+
+  def puts_to_clients(clients_array, message)
+    clients_array.each do |client|
+      client.puts message
+    end
+  end
+
+  def clients_ready?
+    clients.each(&:check_ready!)
+
+    clients.all?(&:ready?)
+  end
+
+  # returns the array of clients that are ready
+  def ready_clients
+    clients.select(&:ready?)
+  end
 
   def new_client_joined
     all_but_newest_client.each do |client|
@@ -47,14 +77,4 @@ class SocketServer
   def all_but_newest_client
     clients[0...-1]
   end
-
-  # Wait and accept a single incoming connection
-  # client = server.accept
-
-  # Send a greeting to the client
-  # client.puts 'Hello from the Ruby TCP Server!'
-
-  # Clean up connections
-  # client.close
-  # server.close
 end

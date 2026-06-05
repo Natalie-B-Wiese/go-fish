@@ -4,6 +4,8 @@ class Game
   attr_reader :players, :deck
   attr_accessor :current_player_index
 
+  MIN_PLAYERS = 2
+
   # validate input method.
   # Socket should call it before calling any other game methods (go_fish, request_player_card)
   # That way they don't show errors

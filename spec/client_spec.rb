@@ -3,7 +3,6 @@ require_relative '../lib/socket_server'
 
 require_relative '../lib/client'
 
-require_relative '../lib/server_game'
 require_relative '../lib/game'
 require_relative 'mock_socket_client'
 require_relative 'mock_socket'

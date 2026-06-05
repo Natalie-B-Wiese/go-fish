@@ -28,7 +28,7 @@ class WarSocketServer
     client = Client.new(client_socket, player_name)
 
     clients << client
-    # associate player and client
+
     client.puts 'Welcome to War!'
   rescue IO::WaitReadable, Errno::EINTR
     puts 'No client to accept'
