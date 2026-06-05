@@ -123,7 +123,6 @@ describe Game do
 
     let(:ace_spades) { Card.new('A', 'Spades') }
     let(:ace_clubs)  { Card.new('A', 'Clubs') }
-    let(:ace_hearts) { Card.new('A', 'Hearts') }
 
     let(:ace_diamonds) { Card.new('A', 'Diamonds') }
     let(:other_card) { Card.new('5', 'Spades') }
@@ -186,40 +185,15 @@ describe Game do
       end
     end
 
-    xcontext 'when player has cards and deck has cards' do
+    context 'when deck does not have cards' do
       before do
-        player1.add_cards([ace_spades, ace_clubs, ace_hearts])
-        game.deck.cards = [ace_diamonds, other_card]
+        player1.add_cards([ace_spades, ace_clubs])
+        game.deck.cards = []
       end
 
-      it 'removes the card from the deck' do
-        card_count_before = game.deck.cards.length
+      it 'switches turn' do
         game.request_deck_card('A')
-        expect(game.deck.cards.length).to eq(card_count_before - 1)
-      end
-
-      it 'adds the card to the player' do
-        card_count_before = player1.cards.length
-        game.request_deck_card('A')
-        expect(player1.cards.length).to eq(card_count_before + 1)
-      end
-
-      context 'when player gets correct card from deck' do
-        it 'makes player have another turn' do
-          player1_index = 0
-
-          game.request_deck_card('A')
-          expect(game.current_player_index).to eq player1_index
-        end
-      end
-    end
-
-    xcontext 'when player does not have cards' do
-      context 'when there are cards in the deck' do
-      end
-
-      context 'when the deck is empty' do
-        # player is out of the game
+        expect(game.current_player_index).to eq player2_index
       end
     end
   end
@@ -271,15 +245,6 @@ describe Game do
       end
 
       context 'when player gets correct card and can make a book' do
-      end
-    end
-
-    context 'when player does not have cards' do
-      context 'when there are cards in the deck' do
-      end
-
-      context 'when the deck is empty' do
-        # player is out of the game
       end
     end
   end
