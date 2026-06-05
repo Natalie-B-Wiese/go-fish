@@ -4,13 +4,6 @@ class Game
   attr_reader :players, :deck
   attr_accessor :current_player_index
 
-  class InvalidInput < StandardError; end
-
-  class NonexistantPlayerName < InvalidInput; end
-  class SamePlayer < InvalidInput; end
-  class IllegalRankRequest < InvalidInput; end
-  class PlayerNoCards < InvalidInput; end
-
   # validate input method.
   # Socket should call it before calling any other game methods (go_fish, request_player_card)
   # That way they don't show errors
@@ -46,11 +39,6 @@ class Game
   # play_turn (player, rank:, opponent:)
   # play_turn (player, opponent: someone, rank: 'A')
   def request_player_card(player_name, rank)
-    raise SamePlayer if player_name == current_player.name
-
-    raise IllegalRankRequest unless current_player.includes_card_with_rank?(rank)
-
-    requested_player = find_player_by_name(player_name)
   end
 
   private
