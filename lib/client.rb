@@ -1,16 +1,21 @@
 require 'socket'
+require 'player'
 
 class Client
   INPUT_SYMBOL = '->'
 
-  attr_reader :socket, :name
+  attr_reader :socket, :player
   attr_accessor :is_ready, :is_ready_sent
 
   def initialize(socket, name)
     @socket = socket
-    @name = name
+    @player = Player.new(name)
     @is_ready = false
     @is_ready_sent = false
+  end
+
+  def name
+    player.name
   end
 
   def ready?

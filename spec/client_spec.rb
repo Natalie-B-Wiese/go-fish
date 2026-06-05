@@ -2,6 +2,7 @@ require 'socket'
 require_relative '../lib/socket_server'
 
 require_relative '../lib/client'
+require_relative '../lib/player'
 
 require_relative '../lib/game'
 require_relative 'mock_socket_client'
@@ -33,7 +34,12 @@ describe Client do
     it 'sets socket correctly' do
       expect(client.socket).to eq socket
     end
-    it 'sets name correctly' do
+
+    it 'creates a player' do
+      expect(client.player).to be_a(Player)
+    end
+
+    it 'player name is correct' do
       expect(client.name).to eq 'Player 1'
     end
   end
