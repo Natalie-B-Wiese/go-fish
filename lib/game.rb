@@ -4,6 +4,20 @@ class Game
   attr_reader :players, :deck
   attr_accessor :current_player_index
 
+  class InvalidInput < StandardError; end
+
+  class NonexistantPlayerName < InvalidInput; end
+  class SamePlayer < InvalidInput; end
+  class IllegalRankRequest < InvalidInput; end
+  class PlayerNoCards < InvalidInput; end
+
+  # validate input method.
+  # Socket should call it before calling any other game methods (go_fish, request_player_card)
+  # That way they don't show errors
+
+  # game collaborates with server
+  # Player does not collaborate with server
+
   def initialize(player_objs)
     @players = player_objs
     @deck = Deck.new
@@ -19,7 +33,7 @@ class Game
     unless deck.empty?
       card_taken = deck.take_top_card
 
-      give_card_to_current_player(card_taken)
+      current_player.add_card(card_taken)
 
       # prevent it from switching turns
       return if card_taken.rank == rank
@@ -29,10 +43,25 @@ class Game
     switch_turn
   end
 
+  # play_turn (player, rank:, opponent:)
+  # play_turn (player, opponent: someone, rank: 'A')
+  def request_player_card(player_name, rank)
+    raise SamePlayer if player_name == current_player.name
+
+    raise IllegalRankRequest unless current_player.includes_card_with_rank?(rank)
+
+    requested_player = find_player_by_name(player_name)
+  end
+
   private
 
-  def give_card_to_current_player(card)
-    players[current_player_index].add_card(card)
+  def current_player
+    players[current_player_index]
+  end
+
+  def find_player_by_name(name)
+    players_with_name = players.select { |player| player.name == name }
+    raise NonexistantPlayerName if players_with_name == []
   end
 
   def switch_turn

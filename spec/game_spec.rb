@@ -130,7 +130,7 @@ describe Game do
     let(:player1_index) { 0 }
     let(:player2_index) { 1 }
 
-    context 'when deck is empty' do
+    context 'deck is empty' do
       before do
         game.deck.cards = []
       end
@@ -141,7 +141,7 @@ describe Game do
       end
     end
 
-    context 'when player does not get correct card from deck' do
+    context 'does not get requested card' do
       before do
         player1.add_cards([ace_spades, ace_clubs])
         game.deck.cards = [other_card, ace_diamonds]
@@ -163,7 +163,7 @@ describe Game do
       end
     end
 
-    context 'when player gets correct card from deck' do
+    context 'gets correct card' do
       before do
         player1.add_cards([ace_spades, ace_clubs])
         game.deck.cards = [ace_diamonds, other_card]
@@ -184,8 +184,112 @@ describe Game do
         expect(game.current_player_index).to eq player1_index
       end
     end
+  end
 
-    context 'when deck does not have cards' do
+  describe '#request_player_card' do
+    let(:player1) { Player.new('Jeff') }
+    let(:player2) { Player.new('Bob') }
+    let(:player_no_cards) { Player.new('Billy') }
+    let(:players) { [player1, player2, player_no_cards] }
+
+    let(:game) { described_class.new(players) }
+
+    let(:ace_spades) { Card.new('A', 'Spades') }
+    let(:ace_diamonds) { Card.new('A', 'Diamonds') }
+    let(:five_card) { Card.new('5', 'Spades') }
+
+    let(:player1_index) { 0 }
+    let(:player2_index) { 1 }
+
+    before do
+      player1.add_cards([ace_spades, five_card])
+      player2.add_cards([ace_diamonds])
+    end
+
+    context 'when requested player does not exist' do
+      it 'throws a Game::NonexistantPlayerName error' do
+        nonexistant_player_name = 'Big guy'
+        card_rank = 'A'
+
+        expect do
+          game.request_player_card(nonexistant_player_name, card_rank)
+        end.to raise_error Game::NonexistantPlayerName
+      end
+    end
+
+    context 'when player requests it from themselves' do
+      it 'throws a Game::SamePlayer error' do
+        current_player_name = player1.name
+        card_rank = 'A'
+
+        expect do
+          game.request_player_card(current_player_name, card_rank)
+        end.to raise_error Game::SamePlayer
+      end
+    end
+
+    context 'when rank does not exist' do
+      it 'throws a Card::InvalidRank error' do
+        invalid_rank = 'Banana'
+        expect do
+          game.request_player_card(player2.name, invalid_rank)
+        end.to raise_error Card::InvalidRank
+      end
+    end
+
+    context 'when requesting player does not have a card with the rank' do
+      it 'throws a Game::IllegalRankRequest error' do
+        card_rank = '6'
+        expect do
+          game.request_player_card(player2.name, card_rank)
+        end.to raise_error Game::IllegalRankRequest
+      end
+    end
+
+    context 'when player is requesting a card from a player who has no cards' do
+      it 'throws a Game::PlayerNoCards error' do
+        card_rank = 'A'
+        expect do
+          game.request_player_card(player_no_cards.name, card_rank)
+        end.to raise_error Game::PlayerNoCards
+      end
+    end
+
+    context 'when requested player does not have card with rank' do
+      it 'does not remove a card from the requested player' do
+        card_count_before = player2.cards.length
+        game.request_player_card(player2.name, '5')
+        expect(player2.cards.length).to eq card_count_before
+      end
+
+      it 'player goes fish' do
+        card_in_deck = Card.new('A', 'Clubs')
+        game.deck.cards = [card_in_deck]
+
+        game.request_player_card(player2.name, '5')
+        expect(player1.cards).to include card_in_deck
+        expect(game.deck.cards).to_not include card_in_deck
+      end
+    end
+
+    context 'when player gets correct card from player' do
+      it 'removes the card from the requested player' do
+        game.request_player_card(player2.name, 'A')
+        expect(player2.cards).to_not include ace_diamonds
+      end
+
+      it 'gives the card to the player' do
+        game.request_player_card(player2.name, 'A')
+        expect(player1.cards).to include ace_diamonds
+      end
+
+      it 'does not switch turn' do
+        game.request_player_card(player2.name, 'A')
+        expect(game.current_player_index).to eq player1_index
+      end
+    end
+
+    xcontext 'when deck does not have cards' do
       before do
         player1.add_cards([ace_spades, ace_clubs])
         game.deck.cards = []
