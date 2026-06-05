@@ -38,18 +38,28 @@ class Game
 
   # play_turn (player, rank:, opponent:)
   # play_turn (player, opponent: someone, rank: 'A')
-  def request_player_card(player_name, rank)
-  end
 
-  private
+  # rank and player_name should be validated before this is called
+  def request_card_from_player(rank, player_name)
+    opponent = find_player_by_name(player_name)
+    cards_taken = opponent.take_cards_with_rank(rank)
+
+    if cards_taken.empty?
+      request_deck_card(rank)
+    else
+      current_player.add_cards(cards_taken)
+    end
+  end
 
   def current_player
     players[current_player_index]
   end
 
+  private
+
   def find_player_by_name(name)
     players_with_name = players.select { |player| player.name == name }
-    raise NonexistantPlayerName if players_with_name == []
+    players_with_name[0]
   end
 
   def switch_turn

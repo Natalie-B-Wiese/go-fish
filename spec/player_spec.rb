@@ -78,9 +78,9 @@ describe Player do
 
     context 'when player does not have the specified card' do
       let(:nonexistant_rank) { 'K' }
-      it 'returns nil' do
+      it 'returns empty array' do
         result = player.take_cards_with_rank(nonexistant_rank)
-        expect(result).to be_nil
+        expect(result).to be_empty
       end
 
       it 'does not remove any cards from player' do

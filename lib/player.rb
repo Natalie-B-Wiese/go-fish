@@ -18,7 +18,7 @@ class Player
   def take_cards_with_rank(rank)
     cards_taken = cards_with_rank(rank)
     self.cards -= cards_taken
-    cards_taken.empty? ? nil : cards_taken # TODO: switch to to be an empty array instaed of returning nil
+    cards_taken
   end
 
   def card_count

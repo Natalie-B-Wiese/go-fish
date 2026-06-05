@@ -185,4 +185,89 @@ describe Game do
       end
     end
   end
+
+  describe '#request_card_from_player' do
+    let(:player1) { Player.new('Jeff') }
+    let(:opponent) { Player.new('Bob') }
+    let(:players) { [player1, opponent] }
+
+    let(:game) { described_class.new(players) }
+
+    let(:request_rank) { 'A' }
+    let(:incorrect_rank) { '5' }
+    let(:good_card) { Card.new(request_rank, 'Clubs') }
+    let(:other_card) { Card.new(incorrect_rank, 'Spades') }
+
+    before do
+      player1.add_card(Card.new(request_rank, 'Spades'))
+    end
+
+    context 'opponent not have card' do
+      before do
+        opponent.add_card(other_card)
+      end
+
+      it 'does not remove opponent card' do
+        game.request_card_from_player(request_rank, opponent.name)
+        expect(opponent.cards).to include other_card
+      end
+
+      context 'goes fish' do
+        context 'gets requested card' do
+          before do
+            game.deck.cards = [good_card]
+          end
+
+          it 'does not switch turn' do
+            game.request_card_from_player(request_rank, opponent.name)
+            expect(game.current_player).to eq player1
+          end
+        end
+
+        context 'not get card' do
+          before do
+            game.deck.cards = [Card.new(incorrect_rank, 'Clubs')]
+          end
+
+          it 'switches turn' do
+            game.request_card_from_player(request_rank, opponent.name)
+            expect(game.current_player).to eq opponent
+          end
+        end
+      end
+    end
+
+    context 'gets correct card' do
+      before do
+        opponent.add_cards([other_card, good_card])
+      end
+
+      it 'removes the card from opponent' do
+        game.request_card_from_player(request_rank, opponent.name)
+        expect(opponent.cards).to_not include good_card
+      end
+
+      it 'gives the card to the player' do
+        game.request_card_from_player(request_rank, opponent.name)
+        expect(player1.cards).to include good_card
+      end
+
+      it 'does not switch turn' do
+        game.request_card_from_player(request_rank, opponent.name)
+        expect(game.current_player).to eq player1
+      end
+
+      it 'works with multiple matching cards' do
+        player_cards_before = player1.cards.length
+        opponent.add_card(Card.new(request_rank, 'Diamonds'))
+        opponent_cards_before = opponent.cards.length
+        matching_card_count = 2
+
+        game.request_card_from_player(request_rank, opponent.name)
+
+        expect(player1.cards.length).to eq(player_cards_before + matching_card_count)
+        expect(opponent.cards.length).to eq(opponent_cards_before - matching_card_count)
+      end
+    end
+  end
 end
