@@ -21,15 +21,19 @@ class Game
     else
       card_taken = deck.take_top_card
       if card_taken.rank == rank
-        puts 'TODO: player received card they wanted'
+        give_card_to_current_player(card_taken)
       else
-        puts 'TODO: give player their card'
+        give_card_to_current_player(card_taken)
         switch_turn
       end
     end
   end
 
   private
+
+  def give_card_to_current_player(card)
+    players[current_player_index].add_card(card)
+  end
 
   def switch_turn
     self.current_player_index += 1

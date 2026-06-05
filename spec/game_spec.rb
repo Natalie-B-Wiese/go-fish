@@ -144,13 +144,45 @@ describe Game do
 
     context 'when player does not get correct card from deck' do
       before do
-        player1.add_cards([ace_spades, ace_clubs, ace_hearts])
+        player1.add_cards([ace_spades, ace_clubs])
         game.deck.cards = [other_card, ace_diamonds]
+      end
+
+      it 'removes the card from the top of the deck' do
+        game.request_deck_card('A')
+        expect(game.deck.cards).to_not include other_card
+      end
+
+      it 'gives the card to the player' do
+        game.request_deck_card('A')
+        expect(player1.cards).to include other_card
       end
 
       it 'switches turn' do
         game.request_deck_card('A')
         expect(game.current_player_index).to eq player2_index
+      end
+    end
+
+    context 'when player gets correct card from deck' do
+      before do
+        player1.add_cards([ace_spades, ace_clubs])
+        game.deck.cards = [ace_diamonds, other_card]
+      end
+
+      it 'removes the card from the top of the deck' do
+        game.request_deck_card('A')
+        expect(game.deck.cards).to_not include ace_diamonds
+      end
+
+      it 'gives the card to the player' do
+        game.request_deck_card('A')
+        expect(player1.cards).to include ace_diamonds
+      end
+
+      it 'does not switch turn' do
+        game.request_deck_card('A')
+        expect(game.current_player_index).to eq player1_index
       end
     end
 
