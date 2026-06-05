@@ -16,17 +16,17 @@ class Game
   end
 
   def request_deck_card(rank)
-    if deck.empty?
-      switch_turn
-    else
+    unless deck.empty?
       card_taken = deck.take_top_card
-      if card_taken.rank == rank
-        give_card_to_current_player(card_taken)
-      else
-        give_card_to_current_player(card_taken)
-        switch_turn
-      end
+
+      give_card_to_current_player(card_taken)
+
+      # prevent it from switching turns
+      return if card_taken.rank == rank
+
     end
+
+    switch_turn
   end
 
   private
