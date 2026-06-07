@@ -2,20 +2,21 @@ require_relative '../lib/game'
 require_relative '../lib/player'
 require_relative '../lib/deck'
 require_relative '../lib/card'
+require_relative '../lib/client'
 
 describe Game do
   # creates a deck
   # deals the deck between the two players
   # the deck should be shuffled
   describe '#initialize' do
-    let(:player1) { Player.new('Jeff') }
-    let(:player2) { Player.new('Bob') }
-    let(:players) { [player1, player2] }
+    let(:client1) { Client.new('socket', 'Jeff') }
+    let(:client2) { Client.new('socket', 'Bob') }
+    let(:clients) { [client1, client2] }
 
-    let(:game) { described_class.new(players) }
+    let(:game) { described_class.new(clients) }
 
-    it 'contains an array of players' do
-      expect(game.players).to eq players
+    it 'contains an array of clients' do
+      expect(game.clients).to eq clients
     end
 
     it 'creates a deck of cards' do
@@ -29,97 +30,97 @@ describe Game do
 
   describe '#start' do
     let(:unshuffled_deck) { Deck.new }
-    let(:player1) { Player.new('Jeff') }
-    let(:player2) { Player.new('Bob') }
-    let(:player3) { Player.new('Billy') }
-    let(:player4) { Player.new('Batman') }
+    let(:client1) { Client.new('socket', 'Jeff') }
+    let(:client2) { Client.new('socket', 'Bob') }
+    let(:client3) { Client.new('socket', 'Billy') }
+    let(:client4) { Client.new('socket', 'Batman') }
 
     # shuffles a deck
     # deals the deck to the players
 
     context 'with 2 or 3 players' do
-      let(:players) { [player1, player2] }
-      let(:game) { described_class.new(players) }
+      let(:clients) { [client1, client2] }
+      let(:game) { described_class.new(clients) }
 
       let(:cards_per_player) { 7 }
-      let(:card_indices_used) { (0...(cards_per_player * players.length)).to_a }
+      let(:card_indices_used) { (0...(cards_per_player * clients.length)).to_a }
 
       before do
         game.start
       end
 
       it 'deals 7 cards to each player' do
-        expect(player1.cards.length).to eq cards_per_player
-        expect(player2.cards.length).to eq cards_per_player
+        expect(client1.player.cards.length).to eq cards_per_player
+        expect(client2.player.cards.length).to eq cards_per_player
       end
 
       # this assumes that it alternates between players when dealing the cards
       it 'cards are shuffled' do
         # even numbers (on 2 players)
-        p1_unshuffled_card_indices = card_indices_used.select { |x| x % players.length == 0 }
+        p1_unshuffled_card_indices = card_indices_used.select { |x| x % clients.length == 0 }
 
         # odd numbers (for 2 players)
-        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % players.length == 0 }
+        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % clients.length == 0 }
 
         p1_unshuffled = p1_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
         p2_unshuffled = p2_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
 
-        expect(player1.cards).to_not eq p1_unshuffled
-        expect(player2.cards).to_not eq p2_unshuffled
+        expect(client1.player.cards).to_not eq p1_unshuffled
+        expect(client2.player.cards).to_not eq p2_unshuffled
       end
     end
 
     context 'with 4 or more players' do
-      let(:players) { [player1, player2, player3, player4] }
-      let(:game) { described_class.new(players) }
+      let(:clients) { [client1, client2, client3, client4] }
+      let(:game) { described_class.new(clients) }
 
       let(:cards_per_player) { 5 }
-      let(:card_indices_used) { (0...(cards_per_player * players.length)).to_a }
+      let(:card_indices_used) { (0...(cards_per_player * clients.length)).to_a }
 
       before do
         game.start
       end
 
       it 'deals 5 cards to each player' do
-        expect(player1.cards.length).to eq cards_per_player
-        expect(player2.cards.length).to eq cards_per_player
-        expect(player3.cards.length).to eq cards_per_player
-        expect(player4.cards.length).to eq cards_per_player
+        expect(client1.player.cards.length).to eq cards_per_player
+        expect(client2.player.cards.length).to eq cards_per_player
+        expect(client3.player.cards.length).to eq cards_per_player
+        expect(client4.player.cards.length).to eq cards_per_player
       end
 
       # this assumes the deal method alternates between players when dealing
       it 'cards are shuffled' do
         # [0, 4, 8, 12, 16]
-        p1_unshuffled_card_indices = card_indices_used.select { |x| x % players.length == 0 }
+        p1_unshuffled_card_indices = card_indices_used.select { |x| x % clients.length == 0 }
 
         # [1, 5, 9, 13, 17]
-        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % players.length == 0 }
+        p2_unshuffled_card_indices = card_indices_used.select { |x| (x + 1) % clients.length == 0 }
 
         # [2, 6, 10, 14, 18]
-        p3_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % players.length == 0 }
+        p3_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % clients.length == 0 }
 
         # [3, 7, 11, 15, 19]
-        p4_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % players.length == 0 }
+        p4_unshuffled_card_indices = card_indices_used.select { |x| (x + 2) % clients.length == 0 }
 
         p1_unshuffled = p1_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
         p2_unshuffled = p2_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
         p3_unshuffled = p3_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
         p4_unshuffled = p4_unshuffled_card_indices.map { |index| unshuffled_deck.cards[index] }
 
-        expect(player1.cards).to_not eq p1_unshuffled
-        expect(player2.cards).to_not eq p2_unshuffled
-        expect(player3.cards).to_not eq p3_unshuffled
-        expect(player4.cards).to_not eq p4_unshuffled
+        expect(client1.player.cards).to_not eq p1_unshuffled
+        expect(client2.player.cards).to_not eq p2_unshuffled
+        expect(client3.player.cards).to_not eq p3_unshuffled
+        expect(client4.player.cards).to_not eq p4_unshuffled
       end
     end
   end
 
   describe '#request_deck_card' do
-    let(:player1) { Player.new('Jeff') }
-    let(:player2) { Player.new('Bob') }
-    let(:players) { [player1, player2] }
+    let(:client1) { Client.new('socket', 'Jeff') }
+    let(:client2) { Client.new('socket', 'Bob') }
+    let(:clients) { [client1, client2] }
 
-    let(:game) { described_class.new(players) }
+    let(:game) { described_class.new(clients) }
 
     let(:ace_spades) { Card.new('A', 'Spades') }
     let(:ace_clubs)  { Card.new('A', 'Clubs') }
@@ -143,7 +144,7 @@ describe Game do
 
     context 'does not get requested card' do
       before do
-        player1.add_cards([ace_spades, ace_clubs])
+        client1.player.add_cards([ace_spades, ace_clubs])
         game.deck.cards = [other_card, ace_diamonds]
       end
 
@@ -154,7 +155,7 @@ describe Game do
 
       it 'gives the card to the player' do
         game.request_deck_card('A')
-        expect(player1.cards).to include other_card
+        expect(client1.player.cards).to include other_card
       end
 
       it 'switches turn' do
@@ -165,7 +166,7 @@ describe Game do
 
     context 'gets correct card' do
       before do
-        player1.add_cards([ace_spades, ace_clubs])
+        client1.player.add_cards([ace_spades, ace_clubs])
         game.deck.cards = [ace_diamonds, other_card]
       end
 
@@ -176,7 +177,7 @@ describe Game do
 
       it 'gives the card to the player' do
         game.request_deck_card('A')
-        expect(player1.cards).to include ace_diamonds
+        expect(client1.player.cards).to include ace_diamonds
       end
 
       it 'does not switch turn' do
@@ -187,11 +188,11 @@ describe Game do
   end
 
   describe '#request_card_from_player' do
-    let(:player1) { Player.new('Jeff') }
-    let(:opponent) { Player.new('Bob') }
-    let(:players) { [player1, opponent] }
+    let(:client) { Client.new('socket', 'Jeff') }
+    let(:opponent) { Client.new('socket', 'Bob') }
+    let(:clients) { [client, opponent] }
 
-    let(:game) { described_class.new(players) }
+    let(:game) { described_class.new(clients) }
 
     let(:request_rank) { 'A' }
     let(:incorrect_rank) { '5' }
@@ -199,17 +200,17 @@ describe Game do
     let(:other_card) { Card.new(incorrect_rank, 'Spades') }
 
     before do
-      player1.add_card(Card.new(request_rank, 'Spades'))
+      client.player.add_card(Card.new(request_rank, 'Spades'))
     end
 
     context 'opponent not have card' do
       before do
-        opponent.add_card(other_card)
+        opponent.player.add_card(other_card)
       end
 
       it 'does not remove opponent card' do
         game.request_card_from_player(request_rank, opponent.name)
-        expect(opponent.cards).to include other_card
+        expect(opponent.player.cards).to include other_card
       end
 
       context 'goes fish' do
@@ -220,7 +221,7 @@ describe Game do
 
           it 'does not switch turn' do
             game.request_card_from_player(request_rank, opponent.name)
-            expect(game.current_player).to eq player1
+            expect(game.current_client).to eq client
           end
         end
 
@@ -231,7 +232,7 @@ describe Game do
 
           it 'switches turn' do
             game.request_card_from_player(request_rank, opponent.name)
-            expect(game.current_player).to eq opponent
+            expect(game.current_client).to eq opponent
           end
         end
       end
@@ -239,34 +240,34 @@ describe Game do
 
     context 'gets correct card' do
       before do
-        opponent.add_cards([other_card, good_card])
+        opponent.player.add_cards([other_card, good_card])
       end
 
       it 'removes the card from opponent' do
         game.request_card_from_player(request_rank, opponent.name)
-        expect(opponent.cards).to_not include good_card
+        expect(opponent.player.cards).to_not include good_card
       end
 
       it 'gives the card to the player' do
         game.request_card_from_player(request_rank, opponent.name)
-        expect(player1.cards).to include good_card
+        expect(client.player.cards).to include good_card
       end
 
       it 'does not switch turn' do
         game.request_card_from_player(request_rank, opponent.name)
-        expect(game.current_player).to eq player1
+        expect(game.current_client).to eq client
       end
 
       it 'works with multiple matching cards' do
-        player_cards_before = player1.cards.length
-        opponent.add_card(Card.new(request_rank, 'Diamonds'))
-        opponent_cards_before = opponent.cards.length
+        player_cards_before = client.player.cards.length
+        opponent.player.add_card(Card.new(request_rank, 'Diamonds'))
+        opponent_cards_before = opponent.player.cards.length
         matching_card_count = 2
 
         game.request_card_from_player(request_rank, opponent.name)
 
-        expect(player1.cards.length).to eq(player_cards_before + matching_card_count)
-        expect(opponent.cards.length).to eq(opponent_cards_before - matching_card_count)
+        expect(client.player.cards.length).to eq(player_cards_before + matching_card_count)
+        expect(opponent.player.cards.length).to eq(opponent_cards_before - matching_card_count)
       end
     end
   end

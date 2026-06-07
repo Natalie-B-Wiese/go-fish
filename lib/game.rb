@@ -1,7 +1,7 @@
 require_relative 'deck'
 
 class Game
-  attr_reader :players, :deck
+  attr_reader :clients, :deck
   attr_accessor :current_player_index
 
   MIN_PLAYERS = 2
@@ -13,10 +13,14 @@ class Game
   # game collaborates with server
   # Player does not collaborate with server
 
-  def initialize(player_objs)
-    @players = player_objs
+  def initialize(client_objs)
+    @clients = client_objs
     @deck = Deck.new
     @current_player_index = 0
+  end
+
+  def players
+    clients.map(&:player)
   end
 
   def start
@@ -51,6 +55,10 @@ class Game
     else
       current_player.add_cards(cards_taken)
     end
+  end
+
+  def current_client
+    clients[current_player_index]
   end
 
   def current_player
