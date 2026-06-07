@@ -1,5 +1,5 @@
 require 'socket'
-require 'player'
+require_relative 'player'
 
 class Client
   INPUT_SYMBOL = '->'
