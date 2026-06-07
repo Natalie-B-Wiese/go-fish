@@ -45,7 +45,18 @@ class SocketServer
     new_game
   end
 
+  def run_game(game)
+    game.start
+
+    # TODO: make run_round loop until there is a winner
+    run_round(game)
+  end
+
   private
+
+  def run_round(game)
+    game.play_turn
+  end
 
   def puts_to_clients(clients_array, message)
     clients_array.each do |client|

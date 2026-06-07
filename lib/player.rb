@@ -33,6 +33,10 @@ class Player
     !cards_with_rank(rank).empty?
   end
 
+  def cards_to_s
+    cards.map(&:rank).join(' ')
+  end
+
   private
 
   def cards_with_rank(rank)

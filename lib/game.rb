@@ -44,6 +44,11 @@ class Game
 
   # play_turn (player, rank:, opponent:)
   # play_turn (player, opponent: someone, rank: 'A')
+  def play_turn
+    print_turn
+    print_cards(clients)
+    current_client.ask('Enter rank')
+  end
 
   # rank and player_name should be validated before this is called
   def request_card_from_player(rank, player_name)
@@ -66,6 +71,24 @@ class Game
   end
 
   private
+
+  def print_turn
+    current_client.puts('It is your turn')
+
+    all_but_current_client.each do |client|
+      client.puts("It is #{current_player.name}'s turn")
+    end
+  end
+
+  def print_cards(clients_array)
+    clients_array.each do |client|
+      client.puts(client.player.cards_to_s)
+    end
+  end
+
+  def all_but_current_client
+    clients - [current_client]
+  end
 
   def find_player_by_name(name)
     players_with_name = players.select { |player| player.name == name }

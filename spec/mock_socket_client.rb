@@ -1,8 +1,10 @@
+require_relative '../lib/player'
 class MockSocketClient
-  attr_reader :socket, :output
+  attr_reader :socket, :output, :player
 
-  def initialize(port)
+  def initialize(port, player_name)
     @socket = TCPSocket.new('localhost', port)
+    @player = Player.new(player_name)
   end
 
   def provide_input(text)

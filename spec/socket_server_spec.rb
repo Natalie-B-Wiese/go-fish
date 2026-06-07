@@ -19,15 +19,15 @@ describe SocketServer do
 
   it 'is not listening on a port before it is started' do
     @server.stop
-    expect { MockSocketClient.new(SocketServer::PORT) }.to raise_error(Errno::ECONNREFUSED)
+    expect { MockSocketClient.new(SocketServer::PORT, 'Player 1') }.to raise_error(Errno::ECONNREFUSED)
   end
 
   describe 'when clients join' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
     let(:player1_name) { 'Jeff' }
+    let(:client1) { MockSocketClient.new(SocketServer::PORT, player1_name) }
 
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
     let(:player2_name) { 'Bob' }
+    let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
 
     before do
       @clients.push client1
@@ -57,11 +57,11 @@ describe SocketServer do
   end
 
   describe 'pending clients' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
     let(:player1_name) { 'Jeff' }
+    let(:client1) { MockSocketClient.new(SocketServer::PORT, player1_name) }
 
-    let(:client2) { MockSocketClient.new(SocketServer::PORT) }
     let(:player2_name) { 'Bob' }
+    let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
 
     before do
       @clients.push client1
@@ -104,8 +104,8 @@ describe SocketServer do
   end
 
   describe '#create_game_if_possible' do
-    let(:client1) { MockSocketClient.new(SocketServer::PORT) }
     let(:player1_name) { 'Jeff' }
+    let(:client1) { MockSocketClient.new(SocketServer::PORT, player1_name) }
 
     before do
       @clients.push client1
@@ -122,8 +122,8 @@ describe SocketServer do
     end
 
     context '2+ players' do
-      let(:client2) { MockSocketClient.new(SocketServer::PORT) }
       let(:player2_name) { 'Bob' }
+      let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
 
       before do
         @clients.push client2
@@ -155,5 +155,75 @@ describe SocketServer do
         end
       end
     end
+  end
+
+  describe '#play_turn' do
+    let(:player1_name) { 'Jeff' }
+    let(:client1) { MockSocketClient.new(SocketServer::PORT, player1_name) }
+
+    let(:player2_name) { 'Henry' }
+    let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
+
+    before do
+      @clients.push client1
+      @server.accept_new_client(player1_name)
+      @clients.push client2
+      @server.accept_new_client(player2_name)
+
+      client1.provide_input('I am sooooo ready')
+      client2.provide_input('Ready')
+
+      @server.create_game_if_possible
+      game = @server.games[0]
+      game.start
+
+      client1.capture_output
+      client2.capture_output
+
+      game.play_turn
+    end
+
+    context 'for all players' do
+      it 'shows their card ranks' do
+        client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
+        result1 = client1.capture_output
+        expect(result1).to match(/#{client1_ranks}/)
+
+        client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
+        result2 = client2.capture_output
+        expect(result2).to match(/#{client2_ranks}/)
+      end
+    end
+
+    context 'on current player' do
+      it 'prints It is your turn' do
+        result = client1.capture_output
+        expect(result).to match(/It is your turn/i)
+      end
+
+      it 'does not print It is player_name\'s turn' do
+        result = client1.capture_output
+        expect(result).to_not match(/It is #{player1_name}'s turn/)
+      end
+
+      it 'asks for rank' do
+        result = client1.capture_output
+        expect(result).to match(/Enter rank/i)
+      end
+    end
+
+    # it prints the player's turn to all players
+    context 'for other players' do
+      it "prints it is player_name's turn" do
+        result = client2.capture_output
+        expect(result).to match(/It is #{player1_name}'s turn/)
+      end
+    end
+
+    # this rank is validated to belong to the player
+    # once validated, it asks the player to choose who to ask it from
+    # This name must be validated to be a player and to not be self
+    # Once everything is validated, the request is made
+    # All clients receive a puts about this request (Turn_Info)
   end
 end
