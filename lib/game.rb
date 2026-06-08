@@ -78,6 +78,10 @@ class Game
     clients - [current_client]
   end
 
+  def all_but_current_player_names
+    all_but_current_client.map(&:name)
+  end
+
   private
 
   def print_round

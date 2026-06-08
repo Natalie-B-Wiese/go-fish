@@ -99,9 +99,8 @@ class Client
   end
 
   def valid_opponent?(game)
-    # TODO: implement this method so it is a valid opponent
     # Opponent is valid if it is a player that is not self
-    true
+    game.all_but_current_player_names.include?(messages[:opponent].value)
   end
 
   def choose_rank
@@ -121,10 +120,10 @@ class Client
   end
 
   def choose_opponent(game)
-    return unless valid_opponent?(game)
+    return if valid_opponent?(game)
 
     unless messages[:opponent].sent?
-      puts game.all_but_current_client.map(&:name).join(', ')
+      puts game.all_but_current_player_names.join(', ')
       ask('Enter player')
     end
 
@@ -133,7 +132,7 @@ class Client
     return if input.empty?
 
     messages[:opponent].value = input.chomp
-    return if valid_opponent?
+    return if valid_opponent?(game)
 
     messages[:opponent].reset
     puts 'Invalid player!'

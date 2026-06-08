@@ -286,6 +286,33 @@ describe SocketServer do
           result = client1.capture_output
           expect(result).to match(/Enter player/i)
         end
+
+        context 'when invalid player' do
+          before do
+            invalid_name = player1_name
+            client1.provide_input(invalid_name)
+            @server.games[0].play_turn
+          end
+
+          it 'prints invalid player' do
+            result = client1.capture_output
+            expect(result).to match(/Invalid player/i)
+          end
+        end
+
+        context 'when valid player' do
+          before do
+            valid_name = player2_name
+            client1.provide_input(valid_name)
+            @server.games[0].play_turn
+          end
+
+          it 'prints round result to all players' do
+            expect(client1.capture_output).to match(/Round result: You asked #{player2_name}/i)
+            expect(client2.capture_output).to match(/Round result: #{player1_name} asked you/i)
+            expect(client3.capture_output).to match(/Round result: #{player1_name} asked #{player2_name}/i)
+          end
+        end
       end
     end
 
