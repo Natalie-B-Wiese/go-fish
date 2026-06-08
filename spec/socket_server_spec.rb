@@ -307,10 +307,21 @@ describe SocketServer do
             @server.games[0].play_turn
           end
 
-          it 'prints round result to all players' do
-            expect(client1.capture_output).to match(/Round result: You asked #{player2_name}/i)
-            expect(client2.capture_output).to match(/Round result: #{player1_name} asked you/i)
-            expect(client3.capture_output).to match(/Round result: #{player1_name} asked #{player2_name}/i)
+          it 'prints request result to all players' do
+            expect(client1.capture_output).to match(/You requested/)
+            expect(client2.capture_output).to match(/#{player1_name} requested/)
+            expect(client3.capture_output).to match(/#{player1_name} requested/)
+          end
+
+          it 'resets message variables after a turn' do
+            client1.capture_output
+            client2.capture_output
+            client3.capture_output
+            @server.games[0].play_turn
+
+            expect(client1.capture_output).to_not match(/You requested/)
+            expect(client2.capture_output).to_not match(/#{player1_name} requested/)
+            expect(client3.capture_output).to_not match(/#{player1_name} requested/)
           end
         end
       end

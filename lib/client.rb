@@ -5,8 +5,8 @@ require_relative 'client_message'
 class Client
   INPUT_SYMBOL = '->'
 
-  attr_reader :socket, :player, :messages
-  attr_accessor :is_input_valid, :has_shown_round
+  attr_reader :socket, :player
+  attr_accessor :is_input_valid, :has_shown_round, :messages
 
   def initialize(socket, name)
     @socket = socket
@@ -15,6 +15,17 @@ class Client
     @has_shown_round = false
 
     @messages = {
+      ready: ClientMessage.new,
+      rank: ClientMessage.new,
+      opponent: ClientMessage.new
+    }
+  end
+
+  def reset_variables
+    self.is_input_valid = false
+    self.has_shown_round = false
+
+    self.messages = {
       ready: ClientMessage.new,
       rank: ClientMessage.new,
       opponent: ClientMessage.new

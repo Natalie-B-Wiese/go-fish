@@ -1,8 +1,12 @@
 require_relative 'deck'
+require_relative 'action_logs/action'
+require_relative 'action_logs/request_action'
+require_relative 'action_logs/give_action'
+require_relative 'action_log'
 
 class Game
   attr_reader :clients, :deck
-  attr_accessor :current_player_index
+  attr_accessor :current_player_index, :action_log
 
   MIN_PLAYERS = 2
 
@@ -17,6 +21,7 @@ class Game
     @clients = client_objs
     @deck = Deck.new
     @current_player_index = 0
+    @action_log = ActionLog.new
   end
 
   def players
@@ -50,7 +55,14 @@ class Game
 
     return unless current_client.input_valid?
 
-    binding.irb
+    opponent_name = current_client.messages[:opponent].value
+    rank = current_client.messages[:rank].value
+    create_request_action(opponent_name, rank)
+    request_card_from_player(rank, opponent_name)
+
+    clients.each do |client|
+      client.reset_variables
+    end
   end
 
   # rank and player_name should be validated before this is called
@@ -83,6 +95,21 @@ class Game
   end
 
   private
+
+  def create_request_action(opponent_name, rank)
+    action = RequestAction.new(current_player,
+                               find_player_by_name(opponent_name),
+                               rank)
+    action_log.push(action)
+
+    print_log_result
+  end
+
+  def print_log_result
+    clients.each do |client|
+      client.puts(action_log.most_recent.to_s(client.player))
+    end
+  end
 
   def print_round
     clients.each do |client|
