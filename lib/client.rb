@@ -47,7 +47,6 @@ class Client
     # TODO: add a guard clause if both rank and opponent are not nil
 
     choose_rank unless messages[:rank].value?
-
     return unless messages[:rank].value?
 
     choose_opponent(game)
