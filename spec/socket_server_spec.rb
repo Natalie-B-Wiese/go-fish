@@ -192,18 +192,43 @@ describe SocketServer do
     end
 
     context 'for all players' do
+      let(:client1_ranks) { @server.clients[0].player.cards.map(&:rank).join(' ') }
+      let(:client2_ranks) { @server.clients[1].player.cards.map(&:rank).join(' ') }
+      let(:client3_ranks) { @server.clients[2].player.cards.map(&:rank).join(' ') }
+
       it 'shows their card ranks' do
-        client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
         result1 = client1.capture_output
         expect(result1).to match(/#{client1_ranks}/)
 
-        client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
         result2 = client2.capture_output
         expect(result2).to match(/#{client2_ranks}/)
 
-        client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
         result3 = client3.capture_output
         expect(result3).to match(/#{client3_ranks}/)
+      end
+
+      it 'shows turn info only once' do
+        client1.capture_output
+        client2.capture_output
+        client3.capture_output
+
+        @server.games[0].play_turn
+
+        expect(client1.capture_output).to_not match(/turn/)
+        expect(client2.capture_output).to_not match(/turn/)
+        expect(client3.capture_output).to_not match(/turn/)
+      end
+
+      it 'shows cards only once' do
+        client1.capture_output
+        client2.capture_output
+        client3.capture_output
+
+        @server.games[0].play_turn
+
+        expect(client1.capture_output).to_not match(/#{client1_ranks}/)
+        expect(client2.capture_output).to_not match(/#{client2_ranks}/)
+        expect(client3.capture_output).to_not match(/#{client3_ranks}/)
       end
     end
 

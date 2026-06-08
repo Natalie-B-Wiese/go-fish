@@ -45,9 +45,12 @@ class Game
   # play_turn (player, rank:, opponent:)
   # play_turn (player, opponent: someone, rank: 'A')
   def play_turn
-    print_turn
-    print_cards(clients)
+    print_round
     current_client.valid_rank_and_player(self)
+
+    return unless current_client.input_valid?
+
+    binding.irb
   end
 
   # rank and player_name should be validated before this is called
@@ -77,17 +80,9 @@ class Game
 
   private
 
-  def print_turn
-    current_client.puts('It is your turn')
-
-    all_but_current_client.each do |client|
-      client.puts("It is #{current_player.name}'s turn")
-    end
-  end
-
-  def print_cards(clients_array)
-    clients_array.each do |client|
-      client.puts(client.player.cards_to_s)
+  def print_round
+    clients.each do |client|
+      client.try_print_round(current_client)
     end
   end
 

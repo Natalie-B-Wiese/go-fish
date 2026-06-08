@@ -47,14 +47,14 @@ class SocketServer
 
   def run_game(game)
     game.start
-
-    # TODO: make run_round loop until there is a winner
     game_loop(game)
+    # TODO: game_end
   end
 
   private
 
   def game_loop(game)
+    # TODO: make run_round loop until there is a winner
     loop do
       run_round(game)
     end

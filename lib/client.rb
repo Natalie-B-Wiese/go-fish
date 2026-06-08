@@ -6,10 +6,13 @@ class Client
   INPUT_SYMBOL = '->'
 
   attr_reader :socket, :player, :messages
+  attr_accessor :is_input_valid, :has_shown_round
 
   def initialize(socket, name)
     @socket = socket
     @player = Player.new(name)
+    @is_input_valid = false
+    @has_shown_round = false
 
     @messages = {
       ready: ClientMessage.new,
@@ -20,6 +23,10 @@ class Client
 
   def name
     player.name
+  end
+
+  def input_valid?
+    !!is_input_valid
   end
 
   def ready?
@@ -44,7 +51,7 @@ class Client
 
   # returns a valid rank and player
   def valid_rank_and_player(game)
-    # TODO: add a guard clause if both rank and opponent are not nil
+    return if input_valid?
 
     choose_rank unless messages[:rank].value?
     return unless messages[:rank].value?
@@ -52,7 +59,7 @@ class Client
     choose_opponent(game)
     return unless messages[:opponent].value?
 
-    puts 'Everything is valid!'
+    self.is_input_valid = true
   end
 
   def read_socket
@@ -61,7 +68,31 @@ class Client
     ''
   end
 
+  def try_print_round(current_client)
+    return if shown_round?
+
+    print_round(current_client.player)
+  end
+
   private
+
+  def shown_round?
+    !!has_shown_round
+  end
+
+  def print_round(current_player)
+    puts(player.cards_to_s)
+    print_turn(current_player)
+    self.has_shown_round = true
+  end
+
+  def print_turn(current_player)
+    if current_player == player
+      puts('It is your turn')
+    else
+      puts("It is #{current_player.name}'s turn")
+    end
+  end
 
   def valid_rank?
     player.includes_card_with_rank?(messages[:rank].value)
@@ -74,20 +105,23 @@ class Client
   end
 
   def choose_rank
-    return if messages[:rank].value?
+    return if valid_rank?
 
     ask('Enter rank') unless messages[:rank].sent?
     messages[:rank].send
-    messages[:rank].value = read_socket.chomp
+    input = read_socket
 
-    return if !messages[:rank].value? || valid_rank?
+    return if input.empty?
+
+    messages[:rank].value = input.chomp
+    return if valid_rank?
 
     messages[:rank].reset
     puts 'Invalid rank!'
   end
 
   def choose_opponent(game)
-    return if messages[:opponent].value?
+    return unless valid_opponent?(game)
 
     unless messages[:opponent].sent?
       puts game.all_but_current_client.map(&:name).join(', ')
@@ -95,9 +129,11 @@ class Client
     end
 
     messages[:opponent].send
-    messages[:opponent].value = read_socket.chomp
+    input = read_socket
+    return if input.empty?
 
-    return if !messages[:opponent].value? || valid_opponent?(game)
+    messages[:opponent].value = input.chomp
+    return if valid_opponent?
 
     messages[:opponent].reset
     puts 'Invalid player!'
