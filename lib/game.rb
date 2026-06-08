@@ -47,7 +47,7 @@ class Game
   def play_turn
     print_turn
     print_cards(clients)
-    current_client.ask('Enter rank')
+    current_client.valid_rank_and_player(self)
   end
 
   # rank and player_name should be validated before this is called
@@ -70,6 +70,11 @@ class Game
     players[current_player_index]
   end
 
+  # used by player
+  def all_but_current_client
+    clients - [current_client]
+  end
+
   private
 
   def print_turn
@@ -84,10 +89,6 @@ class Game
     clients_array.each do |client|
       client.puts(client.player.cards_to_s)
     end
-  end
-
-  def all_but_current_client
-    clients - [current_client]
   end
 
   def find_player_by_name(name)

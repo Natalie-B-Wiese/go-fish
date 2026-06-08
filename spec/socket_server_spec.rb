@@ -1,4 +1,5 @@
 require 'socket'
+require_relative '../lib/client_message'
 require_relative '../lib/socket_server'
 require_relative 'mock_socket_client'
 
@@ -164,14 +165,20 @@ describe SocketServer do
     let(:player2_name) { 'Henry' }
     let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
 
+    let(:player3_name) { 'Billy' }
+    let(:client3) { MockSocketClient.new(SocketServer::PORT, player3_name) }
+
     before do
       @clients.push client1
       @server.accept_new_client(player1_name)
       @clients.push client2
       @server.accept_new_client(player2_name)
+      @clients.push client3
+      @server.accept_new_client(player3_name)
 
       client1.provide_input('I am sooooo ready')
       client2.provide_input('Ready')
+      client3.provide_input('Ready')
 
       @server.create_game_if_possible
       game = @server.games[0]
@@ -179,6 +186,7 @@ describe SocketServer do
 
       client1.capture_output
       client2.capture_output
+      client3.capture_output
 
       game.play_turn
     end
@@ -192,6 +200,10 @@ describe SocketServer do
         client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
         result2 = client2.capture_output
         expect(result2).to match(/#{client2_ranks}/)
+
+        client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
+        result3 = client3.capture_output
+        expect(result3).to match(/#{client3_ranks}/)
       end
     end
 
@@ -210,13 +222,56 @@ describe SocketServer do
         result = client1.capture_output
         expect(result).to match(/Enter rank/i)
       end
+
+      context 'invalid rank entered' do
+        before do
+          client1.capture_output
+          invalid_rank = 'banana'
+          client1.provide_input(invalid_rank)
+
+          @server.games[0].play_turn
+        end
+
+        it 'prints invalid rank' do
+          result = client1.capture_output
+          expect(result).to match(/Invalid rank/i)
+        end
+
+        it 'does not show list of players' do
+          result = client1.capture_output
+          expect(result).to_not match(/#{player2_name}, #{player3_name}/)
+        end
+      end
+
+      context 'after getting valid rank' do
+        before do
+          client1.capture_output
+          valid_rank = @server.clients[0].player.cards[0].rank
+          client1.provide_input(valid_rank)
+
+          @server.games[0].play_turn
+        end
+
+        it 'shows list of players excluding self' do
+          result = client1.capture_output
+          expect(result).to match(/#{player2_name}, #{player3_name}/)
+        end
+
+        it 'asks for player' do
+          result = client1.capture_output
+          expect(result).to match(/Enter player/i)
+        end
+      end
     end
 
     # it prints the player's turn to all players
     context 'for other players' do
       it "prints it is player_name's turn" do
-        result = client2.capture_output
-        expect(result).to match(/It is #{player1_name}'s turn/)
+        result1 = client2.capture_output
+        expect(result1).to match(/It is #{player1_name}'s turn/)
+
+        result2 = client3.capture_output
+        expect(result2).to match(/It is #{player1_name}'s turn/)
       end
     end
 
