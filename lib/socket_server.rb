@@ -22,7 +22,7 @@ class SocketServer
     @games ||= []
   end
 
-  def accept_new_client(player_name = 'Random Player')
+  def accept_new_client(player_name = "Player #{clients.length + 1}")
     client_socket = @server.accept_nonblock
 
     client = Client.new(client_socket, player_name)
