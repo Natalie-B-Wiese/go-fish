@@ -2,6 +2,7 @@ require_relative 'deck'
 require_relative 'action_logs/action'
 require_relative 'action_logs/request_action'
 require_relative 'action_logs/give_action'
+require_relative 'action_logs/deck_action'
 require_relative 'action_log'
 
 class Game
@@ -34,14 +35,16 @@ class Game
   end
 
   def request_deck_card(rank)
-    unless deck.empty?
+    if deck.empty?
+      create_deck_action(rank)
+    else
       card_taken = deck.take_top_card
+      create_deck_action(rank, card_taken.rank)
 
       current_player.add_card(card_taken)
 
       # prevent it from switching turns
       return if card_taken.rank == rank
-
     end
 
     switch_turn
@@ -112,6 +115,14 @@ class Game
                             opponent_player,
                             rank,
                             num_cards_taken)
+    action_log.push(action)
+
+    print_log_result
+  end
+
+  # initialize(current_player, rank, rank_taken = nil)
+  def create_deck_action(rank, rank_taken = nil)
+    action = DeckAction.new(current_player, rank, rank_taken)
     action_log.push(action)
 
     print_log_result

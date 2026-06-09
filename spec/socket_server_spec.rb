@@ -183,7 +183,7 @@ describe SocketServer do
       @server.create_game_if_possible
       game = @server.games[0]
       while game.nil?
-        puts 'Game nil. Trying again.'
+        print 'Game nil. Trying again.'
         sleep(1)
         @server.create_game_if_possible
         game = @server.games[0]
@@ -337,6 +337,12 @@ describe SocketServer do
               expect(client2.capture_output).to match(/You gave #{player1_name}/)
               expect(client3.capture_output).to match(/#{player2_name} gave #{player1_name}/)
             end
+
+            it 'does not print a deck action' do
+              expect(client1.capture_output).to_not match(/deck/i)
+              expect(client2.capture_output).to_not match(/deck/i)
+              expect(client3.capture_output).to_not match(/deck/i)
+            end
           end
 
           context 'when opponent not have card' do
@@ -349,6 +355,12 @@ describe SocketServer do
               expect(client1.capture_output).to match(/#{player3_name} did not have/)
               expect(client2.capture_output).to match(/#{player3_name} did not have/)
               expect(client3.capture_output).to match(/You did not have/)
+            end
+
+            it 'prints a deck action' do
+              expect(client1.capture_output).to match(/deck/i)
+              expect(client2.capture_output).to match(/deck/i)
+              expect(client3.capture_output).to match(/deck/i)
             end
           end
 
