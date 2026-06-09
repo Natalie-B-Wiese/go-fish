@@ -5,6 +5,10 @@ require_relative '../lib/card'
 require_relative '../lib/client'
 
 describe Game do
+  before do
+    allow_any_instance_of(Client).to receive(:puts)
+  end
+
   # creates a deck
   # deals the deck between the two players
   # the deck should be shuffled
