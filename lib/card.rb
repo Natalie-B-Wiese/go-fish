@@ -20,6 +20,10 @@ class Card
     rank == other.rank && suit == other.suit
   end
 
+  def self.rank_to_value(rank)
+    RANKS.index(rank)
+  end
+
   def value
     RANKS.index(rank)
   end

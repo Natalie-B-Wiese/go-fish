@@ -2,6 +2,8 @@
 class Book
   attr_reader :value
 
+  SIZE = 4
+
   class InvalidValue < StandardError; end
 
   def initialize(value)

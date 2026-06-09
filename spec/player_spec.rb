@@ -3,11 +3,12 @@ require_relative '../lib/card'
 
 describe Player do
   describe '#initialize' do
-    it 'has a name and empty cards' do
+    it 'has a name, empty cards, and empty books' do
       player = Player.new('Natalie')
 
       expect(player.name).to eq 'Natalie'
       expect(player.cards).to be_empty
+      expect(player.books).to be_empty
     end
   end
 
@@ -133,6 +134,65 @@ describe Player do
     it 'returns false when player has cards' do
       player.add_card(Card.new('A', 'Spades'))
       expect(player).to_not be_out_of_cards
+    end
+  end
+
+  describe '#try_make_book' do
+    let(:player) { Player.new('Natalie') }
+    let(:possible_rank) { 'A' }
+    let(:impossible_rank) { '5' }
+
+    before do
+      player.add_card(Card.new(possible_rank, 'Hearts'))
+      player.add_card(Card.new(possible_rank, 'Spades'))
+      player.add_card(Card.new(possible_rank, 'Clubs'))
+      player.add_card(Card.new(possible_rank, 'Diamonds'))
+
+      player.add_card(Card.new(impossible_rank, 'Hearts'))
+      player.add_card(Card.new(impossible_rank, 'Spades'))
+      player.add_card(Card.new(impossible_rank, 'Clubs'))
+    end
+
+    context 'when book possible' do
+      it 'removes those cards from player' do
+        card_count_before = player.cards.length
+
+        player.try_make_book(possible_rank)
+        expect(player.cards.length).to eq card_count_before - Book::SIZE
+        expect(player.includes_card_with_rank?(possible_rank)).to be false
+      end
+
+      it 'adds the book to books array' do
+        value = Card.rank_to_value(possible_rank)
+        player.try_make_book(possible_rank)
+        expect(player.book_count).to eq 1
+        expect(player.books[0].value).to eq value
+      end
+
+      it 'returns the book' do
+        result = player.try_make_book(possible_rank)
+        expect(result).not_to be_nil
+      end
+    end
+
+    context 'when book impossible' do
+      it 'returns nil' do
+        result = player.try_make_book(impossible_rank)
+        expect(result).to be_nil
+      end
+
+      it 'does not remove cards' do
+        card_count_before = player.cards.length
+
+        player.try_make_book(impossible_rank)
+        expect(player.cards.length).to eq card_count_before
+        expect(player.includes_card_with_rank?(possible_rank)).to be true
+      end
+
+      it 'does not add a book to array' do
+        player.try_make_book(impossible_rank)
+        expect(player.book_count).to eq 0
+      end
     end
   end
 end
