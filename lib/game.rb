@@ -69,6 +69,8 @@ class Game
     opponent = find_player_by_name(player_name)
     cards_taken = opponent.take_cards_with_rank(rank)
 
+    create_give_action(opponent, rank, cards_taken.length)
+
     if cards_taken.empty?
       request_deck_card(rank)
     else
@@ -99,6 +101,17 @@ class Game
     action = RequestAction.new(current_player,
                                find_player_by_name(opponent_name),
                                rank)
+    action_log.push(action)
+
+    print_log_result
+  end
+
+  def create_give_action(opponent_player, rank, num_cards_taken)
+    # initialize(current_player, opponent_player, rank, num_cards_taken)
+    action = GiveAction.new(current_player,
+                            opponent_player,
+                            rank,
+                            num_cards_taken)
     action_log.push(action)
 
     print_log_result

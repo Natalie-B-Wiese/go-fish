@@ -13,7 +13,7 @@ class GiveAction < Action
     if num_cards_taken.zero?
       "#{opponent_to_s(player)} did not have any #{rank}s."
     else
-      "#{opponent_to_s(player)} gave #{player_to_s(player)} #{num_cards_taken} #{rank}s."
+      "#{opponent_to_s(player)} gave #{player_to_s(player, false)} #{num_cards_taken} #{rank}s."
     end
   end
 end

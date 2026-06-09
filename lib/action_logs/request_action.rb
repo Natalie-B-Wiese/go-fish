@@ -9,6 +9,6 @@ class RequestAction < Action
   end
 
   def to_s(player)
-    "#{player_to_s(player)} requested a #{rank} from #{opponent_to_s(player)}."
+    "#{player_to_s(player)} requested a #{rank} from #{opponent_to_s(player, false)}."
   end
 end

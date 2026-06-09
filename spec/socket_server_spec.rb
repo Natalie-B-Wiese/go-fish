@@ -290,6 +290,13 @@ describe SocketServer do
         before do
           client1.capture_output
           valid_rank = @server.clients[0].player.cards[0].rank
+
+          # give player2 that card
+          @server.clients[1].player.add_card(Card.new(valid_rank, 'Spades'))
+
+          # make sure player3 does not have that card
+          @server.clients[2].player.take_cards_with_rank(valid_rank)
+
           client1.provide_input(valid_rank)
 
           @server.games[0].play_turn
@@ -319,46 +326,73 @@ describe SocketServer do
         end
 
         context 'when valid player' do
-          before do
-            valid_name = player2_name
-            client1.provide_input(valid_name)
-            @server.games[0].play_turn
+          context 'when opponent has card' do
+            before do
+              client1.provide_input(player2_name)
+              @server.games[0].play_turn
+            end
+
+            it 'shows give result to all players' do
+              expect(client1.capture_output).to match(/#{player2_name} gave you/)
+              expect(client2.capture_output).to match(/You gave #{player1_name}/)
+              expect(client3.capture_output).to match(/#{player2_name} gave #{player1_name}/)
+            end
           end
 
-          it 'prints request result to all players' do
-            expect(client1.capture_output).to match(/You requested/)
-            expect(client2.capture_output).to match(/#{player1_name} requested/)
-            expect(client3.capture_output).to match(/#{player1_name} requested/)
+          context 'when opponent not have card' do
+            before do
+              client1.provide_input(player3_name)
+              @server.games[0].play_turn
+            end
+
+            it 'shows did not have result to all players' do
+              expect(client1.capture_output).to match(/#{player3_name} did not have/)
+              expect(client2.capture_output).to match(/#{player3_name} did not have/)
+              expect(client3.capture_output).to match(/You did not have/)
+            end
           end
 
-          it 'shows hands after every turn' do
-            client1.capture_output
-            client2.capture_output
-            client3.capture_output
-            @server.games[0].play_turn
+          context 'other time' do
+            before do
+              client1.provide_input(player2_name)
+              @server.games[0].play_turn
+            end
 
-            client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
-            client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
-            client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
-            result1 = client1.capture_output
-            expect(result1).to match(/#{client1_ranks}/)
+            it 'prints request result to all players' do
+              expect(client1.capture_output).to match(/You requested/)
+              expect(client2.capture_output).to match(/#{player1_name} requested/)
+              expect(client3.capture_output).to match(/#{player1_name} requested/)
+            end
 
-            result2 = client2.capture_output
-            expect(result2).to match(/#{client2_ranks}/)
+            it 'shows hands after every turn' do
+              client1.capture_output
+              client2.capture_output
+              client3.capture_output
+              @server.games[0].play_turn
 
-            result3 = client3.capture_output
-            expect(result3).to match(/#{client3_ranks}/)
-          end
+              client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
+              client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
+              client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
+              result1 = client1.capture_output
+              expect(result1).to match(/#{client1_ranks}/)
 
-          it 'resets message variables after a turn' do
-            client1.capture_output
-            client2.capture_output
-            client3.capture_output
-            @server.games[0].play_turn
+              result2 = client2.capture_output
+              expect(result2).to match(/#{client2_ranks}/)
 
-            expect(client1.capture_output).to_not match(/You requested/)
-            expect(client2.capture_output).to_not match(/#{player1_name} requested/)
-            expect(client3.capture_output).to_not match(/#{player1_name} requested/)
+              result3 = client3.capture_output
+              expect(result3).to match(/#{client3_ranks}/)
+            end
+
+            it 'resets message variables after a turn' do
+              client1.capture_output
+              client2.capture_output
+              client3.capture_output
+              @server.games[0].play_turn
+
+              expect(client1.capture_output).to_not match(/You requested/)
+              expect(client2.capture_output).to_not match(/#{player1_name} requested/)
+              expect(client3.capture_output).to_not match(/#{player1_name} requested/)
+            end
           end
         end
       end

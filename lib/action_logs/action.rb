@@ -14,17 +14,19 @@ class Action
     raise 'Override to_s(player)!'
   end
 
-  def opponent_to_s(you_player)
-    player_variable_to_s(opponent_player, you_player)
+  def opponent_to_s(you_player, is_subject = true)
+    player_variable_to_s(opponent_player, you_player, is_subject)
   end
 
-  def player_to_s(you_player)
-    player_variable_to_s(current_player, you_player)
+  def player_to_s(you_player, is_subject = true)
+    player_variable_to_s(current_player, you_player, is_subject)
   end
 
   private
 
-  def player_variable_to_s(variable_player, you_player)
-    variable_player == you_player ? 'You' : variable_player.name
+  def player_variable_to_s(variable_player, you_player, is_subject)
+    you = 'You'
+    you = you.downcase unless is_subject
+    variable_player == you_player ? you : variable_player.name
   end
 end
