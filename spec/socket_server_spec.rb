@@ -421,6 +421,107 @@ describe SocketServer do
       end
     end
 
+    context 'when player gets card' do
+      let(:valid_rank) { 'A' }
+
+      before do
+        client1.capture_output
+
+        # make sure player1 only has one of those cards
+        card = Card.new(valid_rank, 'Clubs')
+        @server.clients[0].player.cards = []
+        @server.clients[0].player.add_card(card)
+
+        # give player2 3 of those cards
+        @server.clients[1].player.add_card(Card.new(valid_rank, 'Spades'))
+        @server.clients[1].player.add_card(Card.new(valid_rank, 'Hearts'))
+        @server.clients[1].player.add_card(Card.new(valid_rank, 'Diamonds'))
+
+        # make sure player3 does not have that card
+        @server.clients[2].player.take_cards_with_rank(valid_rank)
+
+        client1.provide_input(valid_rank)
+        @server.games[0].play_turn
+
+        client1.capture_output
+        client2.capture_output
+        client3.capture_output
+      end
+
+      it 'prints go again message to all players' do
+        client1.provide_input(player2_name)
+        @server.games[0].play_turn
+
+        expect(client1.capture_output).to match(/again/i)
+        expect(client2.capture_output).to match(/again/i)
+        expect(client3.capture_output).to match(/again/i)
+      end
+
+      it 'shows hands again' do
+        client1.provide_input(player2_name)
+        @server.games[0].play_turn
+
+        client1.capture_output
+        client2.capture_output
+        client3.capture_output
+        @server.games[0].play_turn
+
+        client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
+        client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
+        client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
+        result1 = client1.capture_output
+        expect(result1).to match(/#{client1_ranks}/)
+
+        result2 = client2.capture_output
+        expect(result2).to match(/#{client2_ranks}/)
+
+        result3 = client3.capture_output
+        expect(result3).to match(/#{client3_ranks}/)
+      end
+
+      context 'when book possible' do
+        before do
+          client1.capture_output
+          client2.capture_output
+          client3.capture_output
+
+          client1.provide_input(player2_name)
+          @server.games[0].play_turn
+        end
+
+        it 'creates a book' do
+          expect(@server.clients[0].player.book_count).to eq 1
+        end
+
+        it 'displays a message a book was made to all players' do
+          expect(client1.capture_output).to match(/book/i)
+          expect(client2.capture_output).to match(/book/i)
+          expect(client3.capture_output).to match(/book/i)
+        end
+      end
+
+      context 'when book impossible' do
+        before do
+          client1.capture_output
+          client2.capture_output
+          client3.capture_output
+
+          client1.provide_input(player3_name)
+          @server.games[0].play_turn
+        end
+
+        it 'does not create a book' do
+          expect(@server.clients[0].player.book_count).to eq 0
+        end
+
+        it 'does not display a book message' do
+          expect(client1.capture_output).to_not match(/book/i)
+          expect(client2.capture_output).to_not match(/book/i)
+          expect(client3.capture_output).to_not match(/book/i)
+        end
+      end
+    end
+
     # this rank is validated to belong to the player
     # once validated, it asks the player to choose who to ask it from
     # This name must be validated to be a player and to not be self

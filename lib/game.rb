@@ -3,6 +3,8 @@ require_relative 'action_logs/action'
 require_relative 'action_logs/request_action'
 require_relative 'action_logs/give_action'
 require_relative 'action_logs/deck_action'
+require_relative 'action_logs/go_again_action'
+require_relative 'action_logs/book_action'
 require_relative 'action_log'
 
 class Game
@@ -64,10 +66,16 @@ class Game
     clients.each(&:reset_variables)
 
     create_request_action(opponent_name, rank)
+
+    previous_player = current_player
     request_card_from_player(rank, opponent_name)
+    return unless current_player == previous_player
+
+    player_go_again(rank)
   end
 
   # rank and player_name should be validated before this is called
+  # This can be private since it is only called by this class
   def request_card_from_player(rank, player_name)
     opponent = find_player_by_name(player_name)
     cards_taken = opponent.take_cards_with_rank(rank)
@@ -100,10 +108,33 @@ class Game
 
   private
 
+  # the rank is the rank that player successfully received on last turn
+  def player_go_again(rank)
+    clients.each(&:reset_variables)
+
+    create_book_action(rank) unless current_player.try_make_book(rank).nil?
+
+    create_go_again_action
+  end
+
   def create_request_action(opponent_name, rank)
     action = RequestAction.new(current_player,
                                find_player_by_name(opponent_name),
                                rank)
+    action_log.push(action)
+
+    print_log_result
+  end
+
+  def create_go_again_action
+    action = GoAgainAction.new(current_player)
+    action_log.push(action)
+
+    print_log_result
+  end
+
+  def create_book_action(rank)
+    action = BookAction.new(current_player, rank)
     action_log.push(action)
 
     print_log_result
