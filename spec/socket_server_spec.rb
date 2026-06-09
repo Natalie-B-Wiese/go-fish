@@ -72,11 +72,6 @@ describe SocketServer do
     let(:player1_name) { 'Jeff' }
     let(:player2_name) { 'Bob' }
 
-    # before do
-    #  create_and_accept_client(player1_name)
-    #  create_and_accept_client(player2_name)
-    # end
-
     context '1 player' do
       before do
         create_and_accept_client(player1_name)
@@ -163,6 +158,12 @@ describe SocketServer do
           @clients[1].provide_input('Ready')
           @server.create_game_if_possible
           expect(@server.games.count).to eq 1
+        end
+
+        it 'returns a game' do
+          all_clients_provide_input('ready')
+          result = @server.create_game_if_possible
+          expect(result).to be_a(Game)
         end
       end
     end
