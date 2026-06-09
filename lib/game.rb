@@ -106,7 +106,35 @@ class Game
     all_but_current_client.map(&:name)
   end
 
+  def game_over?
+    book_count == (Card::SUITS * Card::RANKS) / Book::SIZE
+  end
+
+  def winning_player
+    winning_players = players_with_most_books
+
+    return winning_players[0] if winning_players.length == 1
+
+    player_with_biggest_value_book(winning_players)
+  end
+
   private
+
+  def book_count
+    players.inject(0) { |sum, player| sum + player.book_count }
+  end
+
+  def players_with_most_books
+    players.select { |player| player.book_count == most_books }
+  end
+
+  def player_with_biggest_value_book(players_array)
+    players_array.max_by(&:biggest_book_value)
+  end
+
+  def most_books
+    players.max_by(&:book_count).book_count
+  end
 
   # the rank is the rank that player successfully received on last turn
   def player_go_again(rank)

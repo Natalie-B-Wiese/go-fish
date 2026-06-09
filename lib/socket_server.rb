@@ -48,16 +48,17 @@ class SocketServer
   def run_game(game)
     game.start
     game_loop(game)
-    # TODO: game_end
+    game_end(game)
   end
 
   private
 
+  def game_end(game)
+    puts_to_clients(clients, "Game over! #{game.winning_player} won!")
+  end
+
   def game_loop(game)
-    # TODO: make run_round loop until there is a winner
-    loop do
-      run_round(game)
-    end
+    run_round(game) until game.game_over?
   end
 
   def run_round(game)

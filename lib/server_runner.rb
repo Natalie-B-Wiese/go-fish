@@ -6,12 +6,7 @@ while true
   begin
     server.accept_new_client
     game = server.create_game_if_possible
-    if game
-      server.run_game(game)
-
-      # for testing purposes, only runs the game once
-      return
-    end
+    server.run_game(game) if game
   rescue StandardError
     server.stop
   end

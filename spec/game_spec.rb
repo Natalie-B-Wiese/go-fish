@@ -275,4 +275,40 @@ describe Game do
       end
     end
   end
+
+  describe '#winning_player' do
+    let(:client1) { Client.new('socket', 'Jeff') }
+    let(:client2) { Client.new('socket', 'Bob') }
+    let(:client3) { Client.new('socket', 'Billy') }
+    let(:clients) { [client1, client2, client3] }
+
+    let(:game) { described_class.new(clients) }
+
+    context 'when one player has most books' do
+      before do
+        client1.player.books = []
+        client2.player.books = [Book.new(5), Book.new(2), Book.new(10)]
+        client3.player.books = [Book.new(12)]
+      end
+
+      it 'returns that player' do
+        result = game.winning_player
+
+        expect(result).to eq client2.player
+      end
+    end
+
+    context 'when there is a tie' do
+      before do
+        client1.player.books = [Book.new(8), Book.new(5), Book.new(2)]
+        client2.player.books = [Book.new(5), Book.new(3), Book.new(4)]
+        client3.player.books = [Book.new(15)]
+      end
+
+      it 'returns player with most book and highest value book' do
+        result = game.winning_player
+        expect(result).to eq client1.player
+      end
+    end
+  end
 end

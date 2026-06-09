@@ -55,6 +55,14 @@ class Player
     cards.map(&:rank).join(' ')
   end
 
+  def biggest_book_value
+    value = 0
+    books.each do |book|
+      value = book.value if value < book.value
+    end
+    value
+  end
+
   private
 
   def cards_with_rank(rank)
