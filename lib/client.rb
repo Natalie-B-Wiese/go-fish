@@ -117,35 +117,37 @@ class Client
   def choose_rank
     return if valid_rank?
 
-    ask('Enter rank') unless messages[:rank].sent?
-    messages[:rank].send
-    input = read_socket
-
+    input = send_ask_and_read_socket('Enter rank', :rank)
     return if input.empty?
 
     messages[:rank].value = input.chomp
     return if valid_rank?
 
-    messages[:rank].reset
-    puts 'Invalid rank!'
+    handle_invalid_send('Invalid rank', :rank)
   end
 
   def choose_opponent(game)
     return if valid_opponent?(game)
 
-    unless messages[:opponent].sent?
-      puts game.all_but_current_player_names.join(', ')
-      ask('Enter player')
-    end
+    puts game.all_but_current_player_names.join(', ') unless messages[:opponent].sent?
 
-    messages[:opponent].send
-    input = read_socket
+    input = send_ask_and_read_socket('Enter player', :opponent)
     return if input.empty?
 
     messages[:opponent].value = input.chomp
     return if valid_opponent?(game)
 
-    messages[:opponent].reset
-    puts 'Invalid player!'
+    handle_invalid_send('Invalid player!', :opponent)
+  end
+
+  def send_ask_and_read_socket(message, messages_key)
+    ask(message) unless messages[messages_key].sent?
+    messages[messages_key].send
+    read_socket
+  end
+
+  def handle_invalid_send(message, messages_key)
+    messages[messages_key].reset
+    puts message
   end
 end

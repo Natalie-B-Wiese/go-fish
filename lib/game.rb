@@ -57,12 +57,11 @@ class Game
 
     opponent_name = current_client.messages[:opponent].value
     rank = current_client.messages[:rank].value
+
+    current_client.reset_variables
+
     create_request_action(opponent_name, rank)
     request_card_from_player(rank, opponent_name)
-
-    clients.each do |client|
-      client.reset_variables
-    end
   end
 
   # rank and player_name should be validated before this is called
