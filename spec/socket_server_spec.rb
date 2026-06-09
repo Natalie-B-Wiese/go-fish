@@ -182,6 +182,13 @@ describe SocketServer do
 
       @server.create_game_if_possible
       game = @server.games[0]
+      while game.nil?
+        puts 'Game nil. Trying again.'
+        sleep(1)
+        @server.create_game_if_possible
+        game = @server.games[0]
+      end
+
       game.start
 
       client1.capture_output
@@ -322,6 +329,25 @@ describe SocketServer do
             expect(client1.capture_output).to match(/You requested/)
             expect(client2.capture_output).to match(/#{player1_name} requested/)
             expect(client3.capture_output).to match(/#{player1_name} requested/)
+          end
+
+          it 'shows hands after every turn' do
+            client1.capture_output
+            client2.capture_output
+            client3.capture_output
+            @server.games[0].play_turn
+
+            client1_ranks = @server.clients[0].player.cards.map(&:rank).join(' ')
+            client2_ranks = @server.clients[1].player.cards.map(&:rank).join(' ')
+            client3_ranks = @server.clients[2].player.cards.map(&:rank).join(' ')
+            result1 = client1.capture_output
+            expect(result1).to match(/#{client1_ranks}/)
+
+            result2 = client2.capture_output
+            expect(result2).to match(/#{client2_ranks}/)
+
+            result3 = client3.capture_output
+            expect(result3).to match(/#{client3_ranks}/)
           end
 
           it 'resets message variables after a turn' do
