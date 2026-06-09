@@ -248,6 +248,17 @@ describe SocketServer do
         expect(result).to match(/Enter rank/i)
       end
 
+      it 'rank is case insensitive' do
+        @server.clients[0].player.add_card(Card.new('A', 'Spades'))
+
+        client1.capture_output
+        client1.provide_input('a')
+        @server.games[0].play_turn
+
+        result = client1.capture_output
+        expect(result).to match(/Enter player/i)
+      end
+
       context 'invalid rank entered' do
         before do
           client1.capture_output

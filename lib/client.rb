@@ -120,7 +120,7 @@ class Client
     input = send_ask_and_read_socket('Enter rank', :rank)
     return if input.empty?
 
-    messages[:rank].value = input.chomp
+    messages[:rank].value = input.chomp.upcase
     return if valid_rank?
 
     handle_invalid_send('Invalid rank', :rank)
