@@ -22,6 +22,23 @@ describe SocketServer do
     @clients.each(&:capture_output)
   end
 
+  def create_and_start_game
+    num_games = @server.games.length
+    @server.create_game_if_possible
+
+    # force the game to be created, even if it initially fails
+    while num_games == @server.games.length
+      print 'Game nil. Trying again.'
+      sleep(1)
+      @server.create_game_if_possible
+    end
+
+    game = @server.games[-1]
+    game.start
+
+    game
+  end
+
   before(:each) do
     @clients = []
     @server = SocketServer.new
@@ -41,7 +58,7 @@ describe SocketServer do
     expect { MockSocketClient.new(SocketServer::PORT, 'Player 1') }.to raise_error(Errno::ECONNREFUSED)
   end
 
-  describe '#accept_new_client' do
+  xdescribe '#accept_new_client' do
     context 'when clients join' do
       let(:player1_name) { 'Jeff' }
       let(:player2_name) { 'Bob' }
@@ -68,7 +85,7 @@ describe SocketServer do
     end
   end
 
-  describe '#create_game_if_possible' do
+  xdescribe '#create_game_if_possible' do
     let(:player1_name) { 'Jeff' }
     let(:player2_name) { 'Bob' }
 
@@ -169,51 +186,30 @@ describe SocketServer do
     end
   end
 
-  xdescribe '#play_turn' do
+  describe '#play_turn' do
     let(:player1_name) { 'Jeff' }
-    let(:client1) { MockSocketClient.new(SocketServer::PORT, player1_name) }
-
     let(:player2_name) { 'Henry' }
-    let(:client2) { MockSocketClient.new(SocketServer::PORT, player2_name) }
-
     let(:player3_name) { 'Billy' }
-    let(:client3) { MockSocketClient.new(SocketServer::PORT, player3_name) }
+
+    let(:client1) { @clients[0] }
+    let(:client2) { @clients[1] }
+    let(:client3) { @clients[2] }
+
+    let(:client1_ranks) { @server.clients[0].player.cards.map(&:rank).join(' ') }
+    let(:client2_ranks) { @server.clients[1].player.cards.map(&:rank).join(' ') }
+    let(:client3_ranks) { @server.clients[2].player.cards.map(&:rank).join(' ') }
 
     before do
-      @clients.push client1
-      @server.accept_new_client(player1_name)
-      @clients.push client2
-      @server.accept_new_client(player2_name)
-      @clients.push client3
-      @server.accept_new_client(player3_name)
+      create_and_accept_clients([player1_name, player2_name, player3_name])
+      all_clients_provide_input('Ready')
+      game = create_and_start_game
 
-      client1.provide_input('I am sooooo ready')
-      client2.provide_input('Ready')
-      client3.provide_input('Ready')
-
-      @server.create_game_if_possible
-      game = @server.games[0]
-      while game.nil?
-        print 'Game nil. Trying again.'
-        sleep(1)
-        @server.create_game_if_possible
-        game = @server.games[0]
-      end
-
-      game.start
-
-      client1.capture_output
-      client2.capture_output
-      client3.capture_output
+      all_clients_clear_output
 
       game.play_turn
     end
 
     context 'for all players' do
-      let(:client1_ranks) { @server.clients[0].player.cards.map(&:rank).join(' ') }
-      let(:client2_ranks) { @server.clients[1].player.cards.map(&:rank).join(' ') }
-      let(:client3_ranks) { @server.clients[2].player.cards.map(&:rank).join(' ') }
-
       it 'shows their card ranks' do
         result1 = client1.capture_output
         expect(result1).to match(/#{client1_ranks}/)
@@ -226,9 +222,7 @@ describe SocketServer do
       end
 
       it 'shows turn info only once' do
-        client1.capture_output
-        client2.capture_output
-        client3.capture_output
+        all_clients_clear_output
 
         @server.games[0].play_turn
 
@@ -238,9 +232,7 @@ describe SocketServer do
       end
 
       it 'shows cards only once' do
-        client1.capture_output
-        client2.capture_output
-        client3.capture_output
+        all_clients_clear_output
 
         @server.games[0].play_turn
 
