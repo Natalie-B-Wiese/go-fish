@@ -21,7 +21,7 @@ class Action
   private
 
   def book_message(player)
-    "#{player_to_s(player)} made a book"
+    "#{player_to_s(player)} made a book!"
   end
 
   def deck_empty?

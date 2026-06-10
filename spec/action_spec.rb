@@ -5,14 +5,16 @@ require_relative '../lib/player'
 #                 cards_received: [], was_book_made: false)
 describe Action do
   describe '#message' do
-    let(:current_player) { Player.new('Jeff') }
+    let(:current_player_name) { 'Jeff' }
+    let(:current_player) { Player.new(current_player_name) }
     let(:calling_player) { Player.new('Bob') }
 
     context 'book_made? true' do
-      it 'is a book message' do
+      let(:book_regex) { /#{current_player_name}([a-zA-Z]*\s*)*book(\.|!)/ }
+      it 'contains a book message' do
         action = Action.new(current_player: current_player, was_book_made: true)
         result = action.message(calling_player)
-        expect(result).to match(/book/i)
+        expect(result).to match(book_regex)
       end
     end
   end
